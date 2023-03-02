@@ -185,6 +185,7 @@ enter_PM:
 ;  mov al, 0x3
 ;  int 0x10
   cli
+  lidt [IDT_Descriptor]
   lgdt [GDT_Descriptor]
   mov eax, cr0
   or eax, 1
@@ -225,6 +226,19 @@ GDT_End:
 GDT_Descriptor:
   dw GDT_End - GDT_Start - 1
   dd GDT_Start
+
+IDT_Start:
+  KEYBOARD:
+    dw 0x0078
+    dw CODE_SEG
+    db 0
+    db 0b11100001
+    dw 0x0000
+IDT_End:
+
+IDT_Descriptor:
+  dw IDT_End - IDT_Start - 1
+  dd IDT_Start
 
 CODE_SEG equ code_descriptor - GDT_Start
 DATA_SEG equ data_descriptor - GDT_Start
