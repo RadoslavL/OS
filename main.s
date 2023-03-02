@@ -20,7 +20,6 @@ init:
   mov ah, 0x0e
   mov bx, string
   mov si, reserved
-  call KERNEL_LOCATION
   jmp loop
 
 loop:
@@ -151,8 +150,9 @@ go_back_print_ping:
   int 0x10
   mov al, 0x0d
   int 0x10
-  mov bx, PS1_env
-  jmp PS1
+  jmp enter_PM
+;  mov bx, PS1_env
+;  jmp PS1
 ;  popa
 ;  jmp key_press
 
@@ -167,6 +167,8 @@ space:
   jmp key_press
 
 backspace:
+  cmp si, reserved
+  jle key_press
   pusha
   mov ah, 0x0e
   int 0x10
@@ -178,13 +180,56 @@ backspace:
   dec si
   jmp key_press
 
+enter_PM:
+;  mov ah, 0x0
+;  mov al, 0x3
+;  int 0x10
+  cli
+  lgdt [GDT_Descriptor]
+  mov eax, cr0
+  or eax, 1
+  mov cr0, eax
+  jmp CODE_SEG:protected_mode
+
+[bits 32]
+protected_mode:
+;  mov byte [0xb8000], 'A'
+;  jmp halt
+  call KERNEL_LOCATION
+  jmp halt
+
 halt:
   hlt
   jmp halt
 
+GDT_Start:
+  null_descriptor:
+    dd 0
+    dd 0
+  code_descriptor:
+    dw 0xffff
+    dw 0
+    db 0
+    db 0b10011010
+    db 0b11001111
+    db 0
+  data_descriptor:
+    dw 0xffff
+    dw 0
+    db 0
+    db 0b10010010
+    db 0b11001111
+    db 0
+GDT_End:
+
+GDT_Descriptor:
+  dw GDT_End - GDT_Start - 1
+  dd GDT_Start
+
+CODE_SEG equ code_descriptor - GDT_Start
+DATA_SEG equ data_descriptor - GDT_Start
 KERNEL_LOCATION equ 0x1000
 BOOT_DISK db 0
-reserved resb 128
 ping_command db "ping", 0
 pong db "pong", 0
 PS1_env db "admin% ", 0
@@ -192,3 +237,4 @@ command_not_found_text db "Command not found!", 0xa, 0xd, 0
 string db "It's me! Mario!", 0xa, 0xd, "admin% ", 0
 times 510-($-$$) db 0
 dw 0xAA55
+reserved resb 128
