@@ -227,18 +227,18 @@ GDT_Descriptor:
   dw GDT_End - GDT_Start - 1
   dd GDT_Start
 
-IDT_Start:
-  KEYBOARD:
-    dw 0x0078
-    dw CODE_SEG
-    db 0
-    db 0b11100001
-    dw 0x0000
-IDT_End:
-
-IDT_Descriptor:
-  dw IDT_End - IDT_Start - 1
-  dd IDT_Start
+;IDT_Start:
+;  KEYBOARD:
+;    dw 0x0078
+;    dw CODE_SEG
+;    db 0
+;    db 0b11100001
+;    dw 0x0000
+;IDT_End:
+;
+;IDT_Descriptor:
+;  dw IDT_End - IDT_Start - 1
+;  dd IDT_Start
 
 CODE_SEG equ code_descriptor - GDT_Start
 DATA_SEG equ data_descriptor - GDT_Start
@@ -252,3 +252,17 @@ string db "It's me! Mario!", 0xa, 0xd, "admin% ", 0
 times 510-($-$$) db 0
 dw 0xAA55
 reserved resb 128
+
+IDT_Start:
+  entry:
+    dw 0
+    dw CODE_SEG
+    db 0
+    db 0b11100001
+    dw 0
+  times 256-($-IDT_Start) dq 0 
+IDT_End:
+
+IDT_Descriptor:
+  dw IDT_End - IDT_Start - 1
+  dd IDT_Start
